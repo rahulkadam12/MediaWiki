@@ -1,131 +1,180 @@
-resource "random_pet" "rg-name" {
-  prefix    = var.resource_group_name_prefix
+# Create A VPC 
+resource "aws_vpc" "main_vpc" {
+    cidr_block          =   "${var.VPC_CIDR}"
+    instance_tenancy    =   "default"
+    tags                = {
+        Name            = "${var.app_name}-vpc"
+    }
 }
 
-resource "azurerm_resource_group" "rg" {
-  name      = random_pet.rg-name.id
-  location  = var.resource_group_location
-}
-
-# Create virtual network
-resource "azurerm_virtual_network" "myterraformnetwork" {
-  name                = "myVnet"
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-}
-
-# Create subnet
-resource "azurerm_subnet" "myterraformsubnet" {
-  name                 = "mySubnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.myterraformnetwork.name
-  address_prefixes     = ["10.0.1.0/24"]
-}
-
-# Create public IPs
-resource "azurerm_public_ip" "myterraformpublicip" {
-  name                = "myPublicIP"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Dynamic"
-}
-
-# Create Network Security Group and rule
-resource "azurerm_network_security_group" "myterraformnsg" {
-  name                = "myNetworkSecurityGroup"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  security_rule {
-    name                       = "SSH"
-    priority                   = 1001
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+# Create IGW for Public Access 
+resource "aws_internet_gateway" "gw" {
+    vpc_id              = "${aws_vpc.main_vpc.id}"
+    tags                = {
+        Name            = "${var.app_name}-igw"
   }
 }
 
-# Create network interface
-resource "azurerm_network_interface" "myterraformnic" {
-  name                = "myNIC"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+#Creating one public subnet
+resource "aws_subnet" "public-subnets" {
 
-  ip_configuration {
-    name                          = "myNicConfiguration"
-    subnet_id                     = azurerm_subnet.myterraformsubnet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.myterraformpublicip.id
+    vpc_id                      = "${aws_vpc.main_vpc.id}"
+    cidr_block                  = "10.10.1.0/24"
+    map_public_ip_on_launch     = true
+
+    tags = {
+        Name                    = "public subnet"
   }
 }
 
-# Connect the security group to the network interface
-resource "azurerm_network_interface_security_group_association" "example" {
-  network_interface_id      = azurerm_network_interface.myterraformnic.id
-  network_security_group_id = azurerm_network_security_group.myterraformnsg.id
+
+# Create Route  for Public Subnet
+resource "aws_route_table" "public-rt" {
+    vpc_id                      = "${aws_vpc.main_vpc.id}"
+
+    route {
+      cidr_block                = "0.0.0.0/0"
+      gateway_id                = "${aws_internet_gateway.gw.id}"
+    }
+
+    tags                        = {
+        Name                    = "${var.app_name}-Public-RT"
+    }
 }
 
-# Generate random text for a unique storage account name
-resource "random_id" "randomId" {
-  keepers = {
-    # Generate a new ID only when a new resource group is defined
-    resource_group = azurerm_resource_group.rg.name
-  }
 
-  byte_length = 8
+
+## Associate Public-Route table to Public Subnet
+resource "aws_route_table_association" "public-assoc" {
+
+    subnet_id                   = "${aws_subnet.public-subnets.id}"
+    route_table_id              = "${aws_route_table.public-rt.id}"
 }
 
-# Create storage account for boot diagnostics
-resource "azurerm_storage_account" "mystorageaccount" {
-  name                     = "diag${random_id.randomId.hex}"
-  location                 = azurerm_resource_group.rg.location
-  resource_group_name      = azurerm_resource_group.rg.name
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
+resource "aws_security_group" "allow_http" {
+  name        = "allow_http"
+  description = "Allow http inbound traffic"
+  vpc_id      = "${aws_vpc.main_vpc.id}"
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "TCP"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+}
+resource "aws_security_group" "ssh-sg" {
+    name                        = "allow-ssh-external"
+    description                 = "Allow SSH Access External"
+    vpc_id                      = "${aws_vpc.main_vpc.id}"
+
+    ingress {
+      from_port                 = 22
+      to_port                   = 22
+      protocol                  = "TCP"
+      cidr_blocks               = ["0.0.0.0/0"]
+    }
+
+    egress {
+      from_port                 = 0
+      to_port                   = 0
+      protocol                  = "-1"
+      cidr_blocks               = ["0.0.0.0/0"]
+    }
 }
 
-# Create (and display) an SSH key
-resource "tls_private_key" "example_ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
+resource "aws_security_group" "nodeport" {
+    name                        = "allow-service"
+    description                 = "Allow the service to be accessed"
+    vpc_id                      = "${aws_vpc.main_vpc.id}"
+
+    ingress {
+      from_port                 = 30163
+      to_port                   = 30163
+      protocol                  = "TCP"
+      cidr_blocks               = ["0.0.0.0/0"]
+    }
+
+    egress {
+      from_port                 = 0
+      to_port                   = 0
+      protocol                  = "-1"
+      cidr_blocks               = ["0.0.0.0/0"]
+    }
 }
 
-# Create virtual machine
-resource "azurerm_linux_virtual_machine" "myterraformvm" {
-  name                  = "myVM"
-  location              = azurerm_resource_group.rg.location
-  resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.myterraformnic.id]
-  size                  = "Standard_DS1_v2"
 
-  os_disk {
-    name                 = "myOsDisk"
-    caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
+## Make Dynamic SSH keys
+resource "null_resource" "make-ssh-keys" {
+    provisioner "local-exec" {
+        command                 = "yes y | ssh-keygen -q -t rsa -f mykey -N ''"
+    }
+
+}
+module "pem_content" {
+  source                        = "matti/outputs/shell"
+  command                       = "cat mykey"
+}
+
+### Get PUB Content
+module "pub_content" {
+  source                        = "matti/outputs/shell"
+  command                       = "cat mykey.pub"
+}
+
+resource "aws_key_pair" "mykey" {
+  key_name                      = "mykey"
+  public_key                    = "${module.pub_content.stdout}"
+}
+
+
+resource "aws_instance" "web" {
+  count                         = 1
+  ami                           = "ami-052efd3df9dad4825"
+  instance_type                 = "t2.large"
+  key_name                      = "${aws_key_pair.mykey.key_name}"
+  vpc_security_group_ids        = ["${aws_security_group.allow_http.id}","${aws_security_group.ssh-sg.id}","${aws_security_group.nodeport.id}"]
+  subnet_id                     = "${aws_subnet.public-subnets.id}"
+
+  tags                          = {
+      Name                      = "${var.app_name}-node"
+  }
+  root_block_device {
+  volume_size = "50"
+    }
+  provisioner "remote-exec" {
+    connection {
+      type                      = "ssh"
+      user                      = "ubuntu"
+      private_key               = "${file("mykey")}"
+      host                      = "${element(aws_instance.web.*.public_ip,count.index)}"
+
+    }
+
+    inline                      = [
+      "sudo apt-get update && sudo apt-get install docker.io -y",
+      "sudo mkdir /mnt/data && chmod 644 /mnt/data",
+      "sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && sudo chmod 755 ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl",
+      "curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/",
+      "sudo minikube start --vm-driver=none",
+      "sleep 30",
+      "sudo apt-get install git -y",
+      "sudo git clone https://github.com/rahulkadam12/MediaWiki.git && cd MediaWiki && cd kubernetes && sudo kubectl create -f secrets.yaml -f persistent-volumes.yaml",
+      "sudo kubectl create  -f mariadb-deployment.yaml -f mariadb-svc.yaml",
+      "sudo kubectl create -f app-deployment.yaml -f web-service.yaml"
+
+    ]
   }
 
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
-
-  computer_name                   = "myvm"
-  admin_username                  = "azureuser"
-  disable_password_authentication = true
-
-  admin_ssh_key {
-    username   = "azureuser"
-    public_key = tls_private_key.example_ssh.public_key_openssh
-  }
-
-  boot_diagnostics {
-    storage_account_uri = azurerm_storage_account.mystorageaccount.primary_blob_endpoint
-  }
+}
+### Print Pem content 
+output "pem_content" {
+    value = "${module.pem_content.stdout}"
 }
