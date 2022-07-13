@@ -96,8 +96,8 @@ resource "aws_security_group" "nodeport" {
     vpc_id                      = "${aws_vpc.main_vpc.id}"
 
     ingress {
-      from_port                 = 30163
-      to_port                   = 30163
+      from_port                 = 8081
+      to_port                   = 8081
       protocol                  = "TCP"
       cidr_blocks               = ["0.0.0.0/0"]
     }
@@ -168,7 +168,7 @@ resource "aws_instance" "web" {
       "sudo apt-get install git -y",
       "sudo git clone https://github.com/rahulkadam12/MediaWiki.git && cd MediaWiki && cd kubernetes && sudo kubectl create -f secrets.yaml -f persistent-volumes.yaml",
       "sudo kubectl create  -f mariadb-deployment.yaml -f mariadb-svc.yaml",
-      "sudo kubectl create -f app-deployment.yaml -f web-service.yaml"
+      "sudo kubectl create -f mediawikiapp-deployment.yaml -f mediawiki-svc.yaml"
 
     ]
   }
