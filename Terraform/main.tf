@@ -96,8 +96,8 @@ resource "aws_security_group" "nodeport" {
     vpc_id                      = "${aws_vpc.main_vpc.id}"
 
     ingress {
-      from_port                 = 8081
-      to_port                   = 8081
+      from_port                 = 30100
+      to_port                   = 30100
       protocol                  = "TCP"
       cidr_blocks               = ["0.0.0.0/0"]
     }
@@ -111,29 +111,10 @@ resource "aws_security_group" "nodeport" {
 }
 
 
-## Make Dynamic SSH keys
-resource "null_resource" "make-ssh-keys" {
-    provisioner "local-exec" {
-        command                 = "yes y | ssh-keygen -q -t rsa -f mykey -N ''"
-    }
-
-}
-module "pem_content" {
-  source                        = "matti/outputs/shell"
-  command                       = "cat mykey"
-}
-
-### Get PUB Content
-module "pub_content" {
-  source                        = "matti/outputs/shell"
-  command                       = "cat mykey.pub"
-}
-
 resource "aws_key_pair" "mykey" {
-  key_name                      = "mykey"
-  public_key                    = "${module.pub_content.stdout}"
+  key_name   = "mykey"
+  public_key = file(var.PATH_TO_PUBLIC_KEY)
 }
-
 
 resource "aws_instance" "web" {
   count                         = 1
@@ -149,33 +130,22 @@ resource "aws_instance" "web" {
   root_block_device {
   volume_size = "50"
     }
+  
+  provisioner "file" {
+    source      = "script.sh"
+    destination = "/tmp/script.sh"
+
+  }
   provisioner "remote-exec" {
-    connection {
-      type                      = "ssh"
-      user                      = "ubuntu"
-      private_key               = "${file("mykey")}"
-      host                      = "${element(aws_instance.web.*.public_ip,count.index)}"
-
-    }
-
-    inline                      = [
-      "sudo apt-get update",
-      "sudo apt install snapd",
-      "sleep 30",
-      "sudo snap install microk8s --classic"
-      "sleep 30"
-      "alias mkctl="microk8s kubectl"",
-      "sleep 30",
-      "sudo apt-get install git -y",
-      "sudo git clone https://github.com/rahulkadam12/MediaWiki.git && cd MediaWiki && cd kubernetes && sudo kubectl create -f secrets.yaml -f persistent-volumes.yaml",
-      "sudo kubectl create  -f mariadb-deployment.yaml -f mariadb-svc.yaml",
-      "sudo kubectl create -f mediawikiapp-deployment.yaml -f mediawiki-svc.yaml"
-
+    inline = [
+      "chmod +x /tmp/script.sh",
+      "sudo /tmp/script.sh",
     ]
   }
-
-}
-### Print Pem content 
-output "pem_content" {
-    value = "${module.pem_content.stdout}"
+  connection {
+    host        = coalesce(self.public_ip, self.private_ip)
+    type        = "ssh"
+    user        = var.INSTANCE_USERNAME
+    private_key = file(var.PATH_TO_PRIVATE_KEY)
+  }
 }
