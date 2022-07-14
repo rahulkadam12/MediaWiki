@@ -23,22 +23,22 @@ spec:
         env:
         - name: MYSQL_USER
           valueFrom:
-          secretKeyRef:
+            secretKeyRef:
               name: mariadb-secret
               key: dbuser
         - name: MYSQL_DATABASE
           valueFrom:
-          secretKeyRef:
+            secretKeyRef:
               name: mariadb-secret
               key: dbname
         - name: MYSQL_PASSWORD
           valueFrom:
-          secretKeyRef:
+            secretKeyRef:
               name: mariadb-secret
               key: dbpassword
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
-          secretKeyRef:
+            secretKeyRef:
               name: mariadb-secret
               key: dbrootpassword
           volumeMounts:
