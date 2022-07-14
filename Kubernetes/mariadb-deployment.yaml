@@ -1,24 +1,27 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1beta
 kind: Deployment
 metadata:
   name: mariadb-deployment
   labels:
-    app: wikimedia-db
+    app: mariadb
     type: database
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: wikimedia-db
+        app: mariadb
         type: database
     spec:
       containers:
-        - name: wikimedia-db
+        - name: mariadb
           image: mariadb
           ports:
             - containerPort: 3306
               name: db-port
+              volumeMounts:
+            - name: wordpress-persistent-storage
+              mountPath: /var/lib/mysql
           env:
             - name: MYSQL_USER
               valueFrom:
@@ -40,9 +43,6 @@ spec:
                 secretKeyRef:
                   name: mariadb-secret
                   key: dbrootpassword
-          volumeMounts:
-            - name: wordpress-persistent-storage
-              mountPath: /var/lib/mysql
       volumes:
         - name: wordpress-persistent-storage
           persistentVolumeClaim:

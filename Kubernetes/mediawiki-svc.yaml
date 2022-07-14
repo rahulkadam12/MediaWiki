@@ -7,6 +7,6 @@ spec:
   selector:
     app: mediawiki
   ports:
-    - nodePort: 8081
+    - nodePort: 30100
       port: 80
       targetPort: 80
