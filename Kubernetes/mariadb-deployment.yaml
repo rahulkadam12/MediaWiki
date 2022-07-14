@@ -23,7 +23,7 @@ spec:
         env:
         - name: MYSQL_USER
           valueFrom:
-            secretKeyRef:
+          secretKeyRef:
               name: mariadb-secret
               key: dbuser
         - name: MYSQL_DATABASE
@@ -41,7 +41,7 @@ spec:
           secretKeyRef:
               name: mariadb-secret
               key: dbrootpassword
-        volumeMounts:
+          volumeMounts:
           - name: wordpress-persistent-storage
             mountPath: /var/lib/mysql
       volumes:
