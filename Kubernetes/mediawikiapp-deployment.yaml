@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mediawiki-deployment
@@ -15,30 +15,26 @@ spec:
         app: mediawiki
     spec:
       containers:
-        - name: mariadb
-          image: mariadb
-          ports:
-            - containerPort: 3306
-              name: db-port
-              volumeMounts:
-            - name: wordpress-persistent-storage
-              mountPath: /var/lib/mysql
-          env:
-            - name: WIKIMEDIA_DB_HOST
-              value: mariadb-service
-            - name: WIKIMEDIA_DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mariadb-secret
-                  key: dbuser
-            - name: WIKIMEDIA_DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mariadb-secret
-                  key: dbpassword
-            - name: WIKIMEDIA_DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: mariadb-secret
-                  key: dbname  
-        
+      - name: mediawiki
+        image: mediawiki
+        ports:
+        - containerPort: 80
+          name: httpd-port
+        env:
+        - name: WIKIMEDIA_DB_HOST
+          value: mariadb-service
+        - name: WIKIMEDIA_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: dbuser
+        - name: WIKIMEDIA_DB_PASSWORD
+          valueFrom:
+          secretKeyRef:
+              name: mariadb-secret
+              key: dbpassword
+        - name: WIKIMEDIA_DB_NAME
+          valueFrom:
+          secretKeyRef:
+              name: mariadb-secret
+              key: dbname
