@@ -37,3 +37,10 @@ terraform plan
 terraform apply
 
 ```
+
+- After terraform task is completed check your application by running on browser
+
+```
+http://{your public IP}:30100
+
+```
