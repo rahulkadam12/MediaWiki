@@ -8,10 +8,42 @@
 - Export the ACCESS KEY and SECRET KEY of AWS as an environment variable or pass it during the run time.
 - Install ruby and ruby json.
 
+## To install Python
+
 ```
+dnf install python3-pip
+vi ~/.bash_profile
+export PATH=~/.local/bin:$PATH
+
+```
+- Save the file and exit logout from root user and login back
+
+## To install aws-cli
+
+```
+pip3 install awscli --upgrade -–user
+
+```
+- Configure aws as shown below 
+
+```
+aws configure (enter following Parameters)
+AWS Access Key ID [None]: Your access Key
+AWS Secret Access Key [None]: Your secret key
+Default region name [None]: your region 
+Default output format [None]: json
+
+```
+## To install Terraform
+
+```
+
+yum update -y
+yum install wget -y
 yum install git ruby ruby-json -y
 wget https://releases.hashicorp.com/terraform/1.2.4/terraform_1.2.4_linux_amd64.zip
-sudo unzip ./terraform_1.2.4_linux_amd64.zip -d /bin/
+yum install unzip -y
+sudo unzip ./terraform_1.2.4_linux_amd64.zip -d /usr/local/bin
 
 ```
 
