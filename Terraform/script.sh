@@ -1,27 +1,46 @@
 #!/bin/bash
 
 # sleep until instance is ready
-until [[ -f /var/lib/cloud/instance/boot-finished ]]; do
-  sleep 1
-done
+#until [[ -f /var/lib/cloud/instance/boot-finished ]]; do
+#  sleep 1
+#done
 
-# install Docker & Packages necessary for MiniKube Installation
+# Update Packages and Install snapd
 
 sudo apt-get update -y
-sudo apt-get install docker.io -y
-sudo apt-get install -y conntrack
+sudo apt install snapd -y
 
-# install MiniKube
+# Sleep for 30 seconds
 
-sudo wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-sudo chmod +x minikube-linux-amd64
-sudo mv minikube-linux-amd64 /usr/local/bin/minikube
+sleep 30
 
-# install Kubectl
+# Install MicroKube 
 
-curl -LO https://storage.googleapis.com/kubernetes-release/release/(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-sudo chmod +x ./kubectl
-sudo mv ./kubectl /usr/local/bin/kubectl
+sudo snap install microk8s --classic
+
+# sleep for 45 seconds
+
+sleep 45
+
+# Check the status of Microk8s service
+
+microk8s status --wait-ready
+sleep 20
+alias kubectl="microk8s kubectl"
+
+# Cloning Git Repository and changing Directory
+cd /opt
+sudo git clone https://github.com/rahulkadam12/MediaWiki.git && cd MediaWiki && cd kubernetes
+
+# Creating pods using Kubectl commands for secrets, PV, Mariadb and Mediawiki deployment
+
+sudo kubectl create -f mariadb-secrets.yaml
+sudo kubectl create -f persistent-volumes.yaml
+sudo kubectl create -f mariadb-deployment.yaml
+sudo kubectl create -f mariadb-svc.yaml
+sudo kubectl create -f mediawikiapp-deployment.yaml
+sudo kubectl create -f mediawiki-svc.yaml
+
 
 # make sure nginx is started
 service nginx start

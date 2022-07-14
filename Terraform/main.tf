@@ -159,12 +159,12 @@ resource "aws_instance" "web" {
     }
 
     inline                      = [
-      "sudo apt-get update && sudo apt-get install docker.io -y",
-      "sudo apt-get install -y conntrack",
-      "sudo mkdir /mnt/data && chmod 644 /mnt/data",
-      "sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && sudo chmod 755 ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl",
-      "curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/",
-      "sudo minikube start --vm-driver=none",
+      "sudo apt-get update",
+      "sudo apt install snapd",
+      "sleep 30",
+      "sudo snap install microk8s --classic"
+      "sleep 30"
+      "alias mkctl="microk8s kubectl"",
       "sleep 30",
       "sudo apt-get install git -y",
       "sudo git clone https://github.com/rahulkadam12/MediaWiki.git && cd MediaWiki && cd kubernetes && sudo kubectl create -f secrets.yaml -f persistent-volumes.yaml",
