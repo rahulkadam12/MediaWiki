@@ -10,8 +10,8 @@
 
 ```
 yum install git ruby ruby-json -y
-wget https://releases.hashicorp.com/terraform/0.12.6/terraform_0.12.6_linux_amd64.zip
-sudo unzip ./terraform_0.11.13_linux_amd64.zip -d /bin/
+wget https://releases.hashicorp.com/terraform/1.2.4/terraform_1.2.4_linux_amd64.zip
+sudo unzip ./terraform_1.2.4_linux_amd64.zip -d /bin/
 
 ```
 
