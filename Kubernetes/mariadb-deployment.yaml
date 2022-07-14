@@ -45,6 +45,6 @@ spec:
           - name: wordpress-persistent-storage
             mountPath: /var/lib/mysql
       volumes:
-        - name: wordpress-persistent-storage
-          persistentVolumeClaim:
-            claimName: mariadb-pvc
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+          claimName: mariadb-pvc
