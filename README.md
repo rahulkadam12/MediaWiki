@@ -15,3 +15,25 @@ sudo unzip ./terraform_0.11.13_linux_amd64.zip -d /bin/
 
 ```
 
+## Running Automation
+
+- Change directory to cd/opt
+- Clone the Repository as shown below
+```
+git clone https://github.com/rahulkadam12/MediaWiki.git
+
+```
+- Switch to terraform Directory as shown below 
+
+```
+cd /Mediwiki/Terraform
+
+```
+- Run terraform commands as shown below
+
+```
+terraform init
+terraform plan
+terraform apply
+
+```
