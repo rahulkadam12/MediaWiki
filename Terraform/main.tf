@@ -111,8 +111,8 @@ resource "aws_security_group" "nodeport" {
 }
 
 
-resource "aws_key_pair" "mykey" {
-  key_name   = "mykey"
+resource "aws_key_pair" "myappkey" {
+  key_name   = "myappkey"
   public_key = file(var.PATH_TO_PUBLIC_KEY)
 }
 
@@ -120,7 +120,7 @@ resource "aws_instance" "web" {
   count                         = 1
   ami                           = "ami-052efd3df9dad4825"
   instance_type                 = "t2.large"
-  key_name                      = "${aws_key_pair.mykey.key_name}"
+  key_name                      = aws_key_pair.myappkey.key_name
   vpc_security_group_ids        = ["${aws_security_group.allow_http.id}","${aws_security_group.ssh-sg.id}","${aws_security_group.nodeport.id}"]
   subnet_id                     = "${aws_subnet.public-subnets.id}"
 

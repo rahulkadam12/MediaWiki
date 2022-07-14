@@ -62,10 +62,10 @@ cd /Mediwiki/Terraform
 
 ```
 - Generate ssh key using the command shown below you need to provide the same keyname file which we defined in Terraform main.tf as this will be used to connect the VM and install Microk8s on VM.
-- After executing command it will create 2 files mykey and mykey.pub
+- After executing command it will create 2 files myappkey and myappkey.pub
 
 ```
-ssh-keygen -f mykey
+ssh-keygen -f myappkey
 
 ```
 

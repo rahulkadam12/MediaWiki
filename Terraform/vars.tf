@@ -1,11 +1,11 @@
 variable "app_name" {}
 variable "VPC_CIDR" {}
 variable "PATH_TO_PRIVATE_KEY" {
-  default = "mykey"
+  default = "myappkey"
 }
 
 variable "PATH_TO_PUBLIC_KEY" {
-  default = "mykey.pub"
+  default = "myappkey.pub"
 }
 
 variable "INSTANCE_USERNAME" {
