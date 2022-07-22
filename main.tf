@@ -110,17 +110,38 @@ resource "aws_security_group" "nodeport" {
     }
 }
 
+resource "null_resource" "make-ssh-keys" {
+    provisioner "local-exec" {
+        command                 = "yes y | ssh-keygen -q -t rsa -f wikimedia -N ''"
+    }
 
-resource "aws_key_pair" "myappkey" {
-  key_name   = "myappkey"
-  public_key = file(var.PATH_TO_PUBLIC_KEY)
 }
+module "pem_content" {
+  source                        = "matti/outputs/shell"
+  command                       = "cat wikimedia"
+}
+
+### Get PUB Content
+module "pub_content" {
+  source                        = "matti/outputs/shell"
+  command                       = "cat wikimedia.pub"
+}
+
+resource "aws_key_pair" "wikimedia" {
+  key_name                      = "wikimedia"
+  public_key                    = "${module.pub_content.stdout}"
+}
+
+#resource "aws_key_pair" "myappkey" {
+#  key_name   = "myappkey"
+#  public_key = file(var.PATH_TO_PUBLIC_KEY)
+#}
 
 resource "aws_instance" "web" {
   count                         = 1
   ami                           = "ami-052efd3df9dad4825"
   instance_type                 = "t2.large"
-  key_name                      = aws_key_pair.myappkey.key_name
+  key_name                      = aws_key_pair.wikimedia.key_name
   vpc_security_group_ids        = ["${aws_security_group.allow_http.id}","${aws_security_group.ssh-sg.id}","${aws_security_group.nodeport.id}"]
   subnet_id                     = "${aws_subnet.public-subnets.id}"
 
@@ -146,6 +167,6 @@ resource "aws_instance" "web" {
     host        = coalesce(self.public_ip, self.private_ip)
     type        = "ssh"
     user        = var.INSTANCE_USERNAME
-    private_key = file(var.PATH_TO_PRIVATE_KEY)
+    private_key = file(wikimedia)
   }
 }
