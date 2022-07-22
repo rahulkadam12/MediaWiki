@@ -1,3 +1,14 @@
+terraform {
+  cloud {
+    organization = "My-Kubernetes-Test"
+
+    workspaces {
+      name = "My-Terraform-AWS"
+    }
+  }
+}
+
+
 # Create A VPC 
 resource "aws_vpc" "main_vpc" {
     cidr_block          =   "${var.VPC_CIDR}"
