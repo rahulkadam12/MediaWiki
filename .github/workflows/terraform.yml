@@ -1,4 +1,4 @@
-#Terraform workflow update
+#Terraform workflow
 
 name: "Terraform Deployment"
 on:
