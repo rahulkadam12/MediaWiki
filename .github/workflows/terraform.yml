@@ -1,4 +1,4 @@
-#Terraform workflow update file
+#Terraform workflow update file var
 
 name: "Terraform Deployment"
 on:
