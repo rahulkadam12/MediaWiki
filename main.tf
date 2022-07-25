@@ -15,7 +15,7 @@ terraform {
     organization = "My-Kubernetes-Test"
 
     workspaces {
-      name = "My-Terraform-AWS"
+      name = "My-Test-Automation"
     }
   }
 }
