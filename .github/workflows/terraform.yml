@@ -45,11 +45,7 @@ jobs:
         run: |
           terraform plan -lock=false
           
-      - name: Terraform state
-        id: state
-        run: |
-          terraform state push terraform.tfstate
-      
+           
                 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
