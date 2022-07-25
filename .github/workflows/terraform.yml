@@ -48,7 +48,7 @@ jobs:
       - name: Terraform state
         id: state
         run: |
-          terraform state push errored.tfstate
+          terraform state push terraform.tfstate
       
                 
       - name: Terraform Apply
