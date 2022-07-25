@@ -134,7 +134,7 @@ resource "aws_security_group" "nodeport" {
 }
 
 
-# Generate a new SSH key
+#Generate a new SSH key
 #resource "tls_private_key" "ssh" {
 #  algorithm = "RSA"
 #  rsa_bits  = "4096"
@@ -196,6 +196,6 @@ resource "aws_instance" "web" {
     host        = coalesce(self.public_ip, self.private_ip)
     type        = "ssh"
     user        = var.INSTANCE_USERNAME
-    private_key = file("wikimedia")
+    private_key = "${module.pem_content.stdout}"
   }
 }
