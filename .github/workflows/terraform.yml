@@ -1,6 +1,6 @@
 #Terraform workflow var
 
-name: "Terraform Deployment var"
+name: "Terraform Deployment"
 on:
   # Manual trigger
   workflow_dispatch:
