@@ -1,10 +1,12 @@
-name: 'Terraform'
+name: 'Terraform Deployment'
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-    - "main"
+    paths:
+     - '*/**'
   pull_request:
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -14,6 +16,10 @@ jobs:
     name: 'Terraform'
     runs-on: ubuntu-latest
     environment: production
+    
+    env:
+       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
