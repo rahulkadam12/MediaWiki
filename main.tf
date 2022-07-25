@@ -190,6 +190,6 @@ resource "aws_instance" "web" {
     host        = coalesce(self.public_ip, self.private_ip)
     type        = "ssh"
     user        = var.INSTANCE_USERNAME
-    private_key = file("matti/outputs/shell/wikimedia")
+    private_key = file("wikimedia.pem")
   }
 }
