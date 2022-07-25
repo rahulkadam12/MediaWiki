@@ -133,9 +133,15 @@ resource "aws_security_group" "nodeport" {
     }
 }
 
+
+# Generate a new SSH key
+#resource "tls_private_key" "ssh" {
+#  algorithm = "RSA"
+#  rsa_bits  = "4096"
+#}
 resource "null_resource" "make-ssh-keys" {
     provisioner "local-exec" {
-        command                 = "yes y | ssh-keygen -q -t rsa -f wikimedia -N ''"
+        command                 = "yes y | ssh-keygen -q -t rsa -f 'wikimedia' -N ''"
     }
 
 }
@@ -155,8 +161,8 @@ resource "aws_key_pair" "wikimedia" {
   public_key                    = "${module.pub_content.stdout}"
 }
 
-#resource "aws_key_pair" "myappkey" {
-#  key_name   = "myappkey"
+#resource "aws_key_pair" "wikimedia" {
+#  key_name   = "wikimedia"
 #  public_key = file(var.PATH_TO_PUBLIC_KEY)
 #}
 
@@ -190,6 +196,6 @@ resource "aws_instance" "web" {
     host        = coalesce(self.public_ip, self.private_ip)
     type        = "ssh"
     user        = var.INSTANCE_USERNAME
-    private_key = file("wikimedia.pem")
+    private_key = file("wikimedia")
   }
 }
